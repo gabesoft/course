@@ -25,12 +25,8 @@ main =
         : "-hide-all-packages"
         : map ("-package="++) deps ++ [source]
 
-sourceDirectories ::
-  [FilePath]
-sourceDirectories =
-  [
-    "src"
-  ]
+sourceDirectories :: [FilePath]
+sourceDirectories = ["src"]
 
 preferredOrderFirst :: [FilePath] -> [FilePath]
 preferredOrderFirst sources =
@@ -43,24 +39,24 @@ preferredOrderFirst sources =
 preferredOrder :: [String]
 preferredOrder = map (\f -> "src/Course" </> f <.> "hs") [
       "List"
-    -- , "Functor"
-    -- , "Applicative"
-    -- , "Monad"
-    -- , "FileIO"
-    -- , "State"
-    -- , "StateT"
-    -- , "Extend"
-    -- , "Comonad"
-    -- , "Compose"
-    -- , "Traversable"
-    -- , "ListZipper"
-    -- , "Parser"
-    -- , "MoreParser"
-    -- , "JsonParser"
-    -- , "Interactive"
-    -- , "Anagrams"
-    -- , "FastAnagrams"
-    -- , "Cheque"
+    , "Functor"
+    , "Applicative"
+    , "Monad"
+    , "FileIO"
+    , "State"
+    , "StateT"
+    , "Extend"
+    , "Comonad"
+    , "Compose"
+    , "Traversable"
+    , "ListZipper"
+    , "Parser"
+    , "MoreParser"
+    , "JsonParser"
+    , "Interactive"
+    , "Anagrams"
+    , "FastAnagrams"
+    , "Cheque"
     ]
 
 isSourceFile ::

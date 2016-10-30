@@ -68,6 +68,8 @@ the contents of b
 ============ share/c.txt
 the contents of c
 
+To run from ./share:
+share/ $ runhaskell -i../src ../src/Course/FileIO.hs files.txt
 -}
 
 -- /Tip:/ use @getArgs@ and @run@
