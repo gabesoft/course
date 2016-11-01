@@ -159,11 +159,9 @@ distinct xs = eval (filtering f xs) S.empty
 -- >>> isHappy 44
 -- True
 isHappy :: Int -> Bool
-isHappy n = case fr of
-              (Full 1) -> True
-              _ -> False
-  where xs = squares n
-        fr = firstRepeat xs
+isHappy n = case firstRepeat (squares n) of
+              Full 1 -> True
+              _      -> False
 
 squares :: Int -> List Int
 squares n = produce next n
