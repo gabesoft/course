@@ -218,7 +218,10 @@ findRight f (ListZipper ls x rs)
   | otherwise = IsZ (ListZipper (reverse ra ++ pure x ++ ls) (hd rb) (tl rb))
   where (ra, rb) = break f rs
 
+hd :: List t -> t
 hd (h :. _) = h
+
+tl :: List t -> List t
 tl (_ :. t) = t
 
 -- | Move the zipper left, or if there are no elements to the left, go to the far right.
