@@ -1,20 +1,20 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE InstanceSigs        #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RebindableSyntax    #-}
+{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
 
 module Course.Parser where
 
-import Course.Core
-import Course.Person
-import Course.Functor
-import Course.Applicative
-import Course.Monad
-import Course.List
-import Course.Optional
-import Data.Char
+import           Course.Applicative
+import           Course.Core
+import           Course.Functor
+import           Course.List
+import           Course.Monad
+import           Course.Optional
+import           Course.Person
+import           Data.Char
 
 -- $setup
 -- >>> :set -XOverloadedStrings
@@ -51,7 +51,7 @@ instance Show a => Show (ParseResult a) where
 -- Function to determine is a parse result is an error.
 isErrorResult :: ParseResult a -> Bool
 isErrorResult (ErrorResult _) = True
-isErrorResult (Result _ _) = False
+isErrorResult (Result _ _)    = False
 
 data Parser a = P {
   parse :: Input -> ParseResult a
@@ -84,7 +84,7 @@ failed = P (\_ -> ErrorResult Failed)
 -- True
 character :: Parser Char
 character = P f
-  where f Nil = ErrorResult UnexpectedEof
+  where f Nil       = ErrorResult UnexpectedEof
         f (x :. xs) = Result xs x
 
 -- | Return a parser that maps any succeeding result with the given function.
@@ -97,7 +97,7 @@ character = P f
 mapParser :: (a -> b) -> Parser a -> Parser b
 mapParser f (P fa) = P (\x -> case fa x of
                                 ErrorResult e -> ErrorResult e
-                                Result i a -> Result i (f a) )
+                                Result i a    -> Result i (f a) )
 
 -- | This is @mapParser@ with the arguments flipped.
 -- It might be more helpful to use this function if you prefer this argument order.
@@ -129,7 +129,7 @@ bindParser :: (a -> Parser b) -> Parser a -> Parser b
 bindParser f (P pa) = P g
   where g input = case pa input of
                     ErrorResult e -> ErrorResult e
-                    Result i a -> parse (f a) i
+                    Result i a    -> parse (f a) i
 
 -- | This is @bindParser@ with the arguments flipped.
 -- It might be more helpful to use this function if you prefer this argument order.
@@ -174,7 +174,7 @@ flbindParser = flip bindParser
 (|||) (P pa1) (P pa2) = P f
   where f input = case pa1 input of
                     ErrorResult _ -> pa2 input
-                    r -> r
+                    r             -> r
 
 infixl 3 |||
 
@@ -277,7 +277,7 @@ digit = satisfy isDigit
 -- True
 natural :: Parser Int
 natural = list1 digit >>= valueParser . toNumber 0
-  where toNumber n Nil = n
+  where toNumber n Nil     = n
         toNumber n (x:.xs) = toNumber (n * 10 + toDigit x) xs
         toDigit c = fromEnum c - fromEnum '0'
 
@@ -302,6 +302,9 @@ space = satisfy isSpace
 -- /Tip:/ Use the @list1@ and @space@ functions.
 spaces1 :: Parser Chars
 spaces1 = list1 space
+
+maybeSpaces :: Parser Chars
+maybeSpaces = list space
 
 -- | Return a parser that produces a lower-case character but fails if
 --
@@ -466,7 +469,7 @@ phoneBodyParser = list (digit ||| is '-' ||| is '.')
 phoneParser :: Parser Chars
 phoneParser = digit
               >>= (\d -> (d :.) <$> phoneBodyParser)
-              >>= (\xs -> (xs ++) <$> thisMany 1 (is '#'))
+              >>= (\xs -> (xs ++) <$> (thisMany 1 (is '#') >>= (const $ valueParser Nil)))
 
 -- | Write a parser for Person.
 --
@@ -514,10 +517,10 @@ phoneParser = digit
 -- Result > rest< Person {age = 123, firstName = "Fred", surname = "Clarkson", smoker = 'y', phone = "123-456.789"}
 personParser :: Parser Person
 personParser = do
-  age <- ageParser
-  firstName <- firstNameParser
-  surname <- surnameParser
-  smoker <- smokerParser
+  age <- ageParser <* maybeSpaces
+  firstName <- firstNameParser <* maybeSpaces
+  surname <- surnameParser <* maybeSpaces
+  smoker <- smokerParser <* maybeSpaces
   phone <- phoneParser
   return $ Person {..}
 
