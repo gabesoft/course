@@ -329,11 +329,8 @@ putStrLn ::
 putStrLn =
   P.putStrLn . hlist
 
-readFile ::
-  Filename
-  -> IO Chars
-readFile =
-  P.fmap listh . P.readFile . hlist
+readFile :: Filename -> IO Chars
+readFile = P.fmap listh . P.readFile . hlist
 
 writeFile ::
   Filename

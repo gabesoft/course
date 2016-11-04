@@ -1,33 +1,26 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Course.Interactive where
 
-import Course.Core
-import Course.Functor
-import Course.Applicative
-import Course.Monad
-import Course.Traversable
-import Course.List
-import Course.Optional
+import           Course.Applicative
+import           Course.Core
+import           Course.Functor
+import           Course.List
+import           Course.Monad
+import           Course.Optional
+import           Course.Traversable
+import qualified Data.List          as L
+import qualified Prelude            as P
 
 -- | Eliminates any value over which a functor is defined.
-vooid ::
-  Functor m =>
-  m a
-  -> m ()
-vooid =
-  (<$>) (const ())
+vooid :: Functor m => m a -> m ()
+vooid = (<$>) (const ())
 
 -- | A version of @bind@ that ignores the result of the effect.
-(>-) ::
-  Monad m =>
-  m a
-  -> m b
-  -> m b
-(>-) a =
-  (>>=) a . const
+(>-) :: Monad m => m a -> m b -> m b
+(>-) a = (>>=) a . const
 
 -- | Runs an action until a result of that action satisfies a given predicate.
 untilM ::
@@ -45,8 +38,7 @@ untilM p a =
       untilM p a
 
 -- | Example program that uses IO to echo back characters that are entered by the user.
-echo ::
-  IO ()
+echo :: IO ()
 echo =
   vooid (untilM
           (\c ->
@@ -62,8 +54,7 @@ echo =
            putStrLn (c :. Nil) >-
            pure c))
 
-data Op =
-  Op Char Chars (IO ()) -- keyboard entry, description, program
+data Op = Op Char Chars (IO ()) -- keyboard entry, description, program
 
 -- |
 --
@@ -80,10 +71,13 @@ data Op =
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
-convertInteractive ::
-  IO ()
-convertInteractive =
-  error "todo: Course.Interactive#convertInteractive"
+convertInteractive :: IO ()
+convertInteractive = vooid $ untilM pure run
+  where run = do
+          putStr "Enter a string: "
+          line <- getLine
+          putStrLn (toUpper <$> line)
+          return $ line == "quit"
 
 -- |
 --
@@ -108,10 +102,17 @@ convertInteractive =
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
-reverseInteractive ::
-  IO ()
-reverseInteractive =
-  error "todo: Course.Interactive#reverseInteractive"
+reverseInteractive :: IO ()
+reverseInteractive = do
+    putStr "Enter an input file to be reversed: "
+    src <- getLine
+    putStrLn src
+    putStr "Enter an output file: "
+    dst <- getLine
+    putStrLn dst
+    txt <- readFile src
+    writeFile dst (reverse txt)
+    putStrLn ("Reversed text saved at '" ++ dst ++ "'")
 
 -- |
 --
@@ -134,13 +135,21 @@ reverseInteractive =
 -- /Tip:/ @putStr :: String -> IO ()@ -- Prints a string to standard output.
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
-encodeInteractive ::
-  IO ()
-encodeInteractive =
-  error "todo: Course.Interactive#encodeInteractive"
+encodeInteractive :: IO ()
+encodeInteractive = do
+  putStr "Enter a URL to encode: "
+  url <- getLine
+  putStrLn (encodeUrl url)
 
-interactive ::
-  IO ()
+encodeUrl :: Chars -> Chars
+encodeUrl Nil = Nil
+encodeUrl (x:.xs)
+  | x == ' ' = "%20" ++ encodeUrl xs
+  | x == '\t' = "%09" ++ encodeUrl xs
+  | x == '"' = "%22" ++ encodeUrl xs
+  | otherwise = x :. encodeUrl xs
+
+interactive :: IO ()
 interactive =
   let ops = (
                Op 'c' "Convert a string to upper-case" convertInteractive
