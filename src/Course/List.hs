@@ -55,6 +55,7 @@ foldRight f b (h :. t) = f h (foldRight f b t)
 
 foldRight' :: (a -> a -> a) -> List a -> a
 foldRight' f (x:.xs) = foldRight f x xs
+foldRight' _ Nil = error "foldRight': Unexpected empty list"
 
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b

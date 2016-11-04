@@ -1,12 +1,17 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Course.Anagrams where
 
-import Course.Core
-import Course.List
-import Course.Functor
+import           Control.DeepSeq
+import           Course.Applicative
+import           Course.Core
+import           Course.Functor
+import           Course.List
+import           Course.Monad
+import qualified Data.List          as L
+import           System.IO          hiding (readFile)
 
 {-
 
@@ -28,17 +33,30 @@ Functions that might help
 
 -- Return all anagrams of the given string
 -- that appear in the given dictionary file.
-anagrams ::
-  Chars
-  -> Filename
-  -> IO (List Chars)
-anagrams =
-  error "todo: Course.Anagrams#anagrams"
+-- anagrams "acost" "words.txt"
+anagrams :: Chars -> Filename -> IO (List Chars)
+anagrams input file = do
+  fileText <- readLatin file
+  let fileWords = filter ((== length input) . length) $ lines (listh fileText)
+  let base = toLower <$> sort input
+  let anas = filter (\w -> sort w `equalIgnoringCase` base) fileWords
+  return anas
+
+readUtf8 :: Chars -> IO [Char]
+readUtf8 file = withFile (hlist file) ReadMode $ \h ->
+  do hSetEncoding h utf8
+     contents <- hGetContents h
+     return $!! contents
+
+readLatin :: Chars -> IO [Char]
+readLatin file = withFile (hlist file) ReadMode $ \h ->
+  do hSetEncoding h latin1
+     contents <- hGetContents h
+     return $!! contents
+
+sort :: Chars -> Chars
+sort = listh . L.sort . hlist
 
 -- Compare two strings for equality, ignoring case
-equalIgnoringCase ::
-  Chars
-  -> Chars
-  -> Bool
-equalIgnoringCase =
-  error "todo: Course.Anagrams#equalIgnoringCase"
+equalIgnoringCase :: Chars -> Chars -> Bool
+equalIgnoringCase = on (==) (toLower <$>)

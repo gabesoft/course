@@ -53,8 +53,8 @@ preferredOrder = map (\f -> "src/Course" </> f <.> "hs") [
     -- , "Parser"
     -- , "MoreParser"
     -- , "JsonParser"
-      "Interactive"
-    , "Anagrams"
+    -- , "Interactive"
+      "Anagrams"
     , "FastAnagrams"
     , "Cheque"
     ]
