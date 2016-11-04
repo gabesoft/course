@@ -195,7 +195,7 @@ between pl pr pa = pl *> pa <* pr
 -- >>> isErrorResult (parse (betweenCharTok '[' ']' character) "abc]")
 -- True
 betweenCharTok :: Char -> Char -> Parser a -> Parser a
-betweenCharTok l r p = between (is l) (charTok r) p
+betweenCharTok l r p = between (charTok l) (charTok r) p
 
 -- | Write a function that parses 4 hex digits and return the character value.
 --

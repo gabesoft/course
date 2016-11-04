@@ -1,10 +1,10 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Course.JsonValue where
 
-import Course.Core
-import Course.List
+import           Course.Core
+import           Course.List
 
 type Assoc = List (Chars, JsonValue)
 

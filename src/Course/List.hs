@@ -1,7 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 -- + Complete the 10 exercises below by filling out the function bodies.
 --   Replace the function bodies (error "todo: ...") with an appropriate
@@ -14,12 +14,12 @@
 module Course.List where
 
 import qualified Control.Applicative as A
-import qualified Control.Monad as M
-import Course.Core
-import Course.Optional
-import qualified System.Environment as E
-import qualified Prelude as P
-import qualified Numeric as N
+import qualified Control.Monad       as M
+import           Course.Core
+import           Course.Optional
+import qualified Numeric             as N
+import qualified Prelude             as P
+import qualified System.Environment  as E
 
 
 -- $setup
@@ -53,6 +53,9 @@ foldRight :: (a -> b -> b) -> b -> List a -> b
 foldRight _ b Nil      = b
 foldRight f b (h :. t) = f h (foldRight f b t)
 
+foldRight' :: (a -> a -> a) -> List a -> a
+foldRight' f (x:.xs) = foldRight f x xs
+
 foldLeft :: (b -> a -> b) -> b -> List a -> b
 foldLeft _ b Nil      = b
 foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
@@ -74,7 +77,7 @@ headOr ::
   a
   -> List a
   -> a
-headOr a Nil = a
+headOr a Nil      = a
 headOr _ (h :. _) = h
 
 -- | The product of the elements of a list.
@@ -110,7 +113,7 @@ length = foldRight (\_ acc -> acc + 1) 0
 
 null :: List a -> Bool
 null Nil = True
-null _ = False
+null _   = False
 
 -- | Map the given function on each element of the list.
 --
@@ -152,7 +155,7 @@ filter p (x :. xs)
 --
 -- prop> x ++ Nil == x
 (++) :: List a -> List a -> List a
-(++) Nil xs = xs
+(++) Nil xs       = xs
 (++) (x :. xs) ys = x :. (xs ++ ys)
 
 infixr 5 ++
@@ -255,7 +258,7 @@ find p (x :. xs)
 -- True
 lengthGT4 :: List a -> Bool
 lengthGT4 (_ :. _ :. _ :. _ :. _) = True
-lengthGT4 _ = False
+lengthGT4 _                       = False
 
 -- | Reverse a list.
 --
@@ -433,7 +436,7 @@ unfoldr ::
 unfoldr f b  =
   case f b of
     Full (a, z) -> a :. unfoldr f z
-    Empty -> Nil
+    Empty       -> Nil
 
 lines ::
   Chars
@@ -468,7 +471,7 @@ listOptional _ Nil =
 listOptional f (h:.t) =
   let r = listOptional f t
   in case f h of
-       Empty -> r
+       Empty  -> r
        Full q -> q :. r
 
 any ::
@@ -579,7 +582,7 @@ reads ::
   -> Optional (a, Chars)
 reads s =
   case P.reads (hlist s) of
-    [] -> Empty
+    []         -> Empty
     ((a, q):_) -> Full (a, listh q)
 
 read ::
@@ -595,7 +598,7 @@ readHexs ::
   -> Optional (a, Chars)
 readHexs s =
   case N.readHex (hlist s) of
-    [] -> Empty
+    []         -> Empty
     ((a, q):_) -> Full (a, listh q)
 
 readHex ::
@@ -605,21 +608,14 @@ readHex ::
 readHex =
   mapOptional fst . readHexs
 
-readFloats ::
-  (RealFrac a) =>
-  Chars
-  -> Optional (a, Chars)
+readFloats :: (RealFrac a) => Chars -> Optional (a, Chars)
 readFloats s =
   case N.readSigned N.readFloat (hlist s) of
-    [] -> Empty
+    []         -> Empty
     ((a, q):_) -> Full (a, listh q)
 
-readFloat ::
-  (RealFrac a) =>
-  Chars
-  -> Optional a
-readFloat =
-  mapOptional fst . readFloats
+readFloat :: (RealFrac a) => Chars -> Optional a
+readFloat = mapOptional fst . readFloats
 
 instance IsString (List Char) where
   fromString =
