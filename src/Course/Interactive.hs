@@ -26,16 +26,12 @@ vooid = (<$>) (const ())
 untilM ::
   Monad m =>
   (a -> m Bool) -- ^ The predicate to satisfy to stop running the action.
-  -> m a -- ^ The action to run until the predicate satisfies.
+  -> m a        -- ^ The action to run until the predicate satisfies.
   -> m a
-untilM p a =
-  a >>= \r ->
-  p r >>= \q ->
-  if q
-    then
-      pure r
-    else
-      untilM p a
+untilM p a = do
+  r <- a
+  q <- p r
+  if q then pure r else untilM p a
 
 -- | Example program that uses IO to echo back characters that are entered by the user.
 echo :: IO ()
@@ -72,12 +68,10 @@ data Op = Op Char Chars (IO ()) -- keyboard entry, description, program
 --
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
 convertInteractive :: IO ()
-convertInteractive = vooid $ untilM pure run
-  where run = do
-          putStr "Enter a string: "
-          line <- getLine
-          putStrLn (toUpper <$> line)
-          return $ line == "quit"
+convertInteractive = do
+    putStr "Enter a string: "
+    line <- getLine
+    putStrLn (toUpper <$> line)
 
 -- |
 --
@@ -151,29 +145,22 @@ encodeUrl (x:.xs)
 
 interactive :: IO ()
 interactive =
-  let ops = (
-               Op 'c' "Convert a string to upper-case" convertInteractive
+  let ops = (  Op 'c' "Convert a string to upper-case" convertInteractive
             :. Op 'r' "Reverse a file" reverseInteractive
             :. Op 'e' "Encode a URL" encodeInteractive
             :. Op 'q' "Quit" (pure ())
             :. Nil
             )
-  in vooid (untilM
-             (\c ->
-               if c == 'q'
-                 then
-                   putStrLn "Bye!" >-
-                   pure True
-                 else
-                   pure False)
+      check Nil = pure False
+      check (c:._) = if c == 'q'
+                    then putStrLn "Bye!" >- pure True
+                    else pure False
+  in vooid (untilM check
              (putStrLn "Select: " >-
-              traverse (\(Op c s _) ->
-                putStr (c :. Nil) >-
-                putStr ". " >-
-                putStrLn s) ops >-
-              getChar >>= \c ->
+              traverse (\(Op c s _) -> putStr (c :. Nil) >- putStr ". " >- putStrLn s) ops >-
+              getLine >>= \c ->
               putStrLn "" >-
-              let o = find (\(Op c' _ _) -> c' == c) ops
+              let o = find (\(Op c' _ _) -> c' == 'x' `headOr` c) ops
                   r = case o of
                         Empty -> (putStrLn "Not a valid selection. Try again." >-)
                         Full (Op _ _ k) -> (k >-)
