@@ -1,6 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 {-
 
@@ -19,22 +19,23 @@ data structures that may assist you in deriving the result. It is not compulsory
 
 module Course.Cheque where
 
-import Course.Core
-import Course.Optional
-import Course.List
-import Course.Functor
-import Course.Applicative
-import Course.Monad
+import           Course.Applicative
+import           Course.Core
+import           Course.Functor
+import           Course.List
+import           Course.Monad
+import           Course.Optional
+import           Data.Char
+import           Data.List          (lookup)
+import           Data.Maybe
 
 -- $setup
 -- >>> :set -XOverloadedStrings
 
 -- The representation of the grouping of each exponent of one thousand. ["thousand", "million", ...]
-illion ::
-  List Chars
+illion :: List Chars
 illion =
-  let preillion ::
-        List (Chars -> Chars)
+  let preillion :: List (Chars -> Chars)
       preillion =
         listh [
           const ""
@@ -48,8 +49,7 @@ illion =
         , const "octo"
         , \q -> if "n" `isPrefixOf` q then "novem" else "noven"
         ]
-      postillion ::
-        List Chars
+      postillion :: List Chars
       postillion =
         listh [
           "vigintillion"
@@ -189,63 +189,84 @@ data Digit =
   | Nine
   deriving (Eq, Enum, Bounded)
 
-showDigit ::
-  Digit
-  -> Chars
-showDigit Zero =
-  "zero"
-showDigit One =
-  "one"
-showDigit Two =
-  "two"
-showDigit Three =
-  "three"
-showDigit Four =
-  "four"
-showDigit Five =
-  "five"
-showDigit Six =
-  "six"
-showDigit Seven =
-  "seven"
-showDigit Eight =
-  "eight"
-showDigit Nine =
-  "nine"
+instance Show Digit where
+  show = hlist . showDigit
+
+showDigit :: Digit -> Chars
+showDigit Zero  = "zero"
+showDigit One   = "one"
+showDigit Two   = "two"
+showDigit Three = "three"
+showDigit Four  = "four"
+showDigit Five  = "five"
+showDigit Six   = "six"
+showDigit Seven = "seven"
+showDigit Eight = "eight"
+showDigit Nine  = "nine"
+
+showDigit3 :: Digit3 -> Chars
+showDigit3 (D1 d)        = showDigit d
+showDigit3 (D2 d1 d2)    = showTwoDigits d1 d2
+showDigit3 (D3 d1 d2 d3) = showThreeDigits d1 d2 d3
+
+instance Show Digit3 where
+  show = hlist . showDigit3
+
+showTens :: Digit -> Chars
+showTens Zero  = ""
+showTens One   = "ten"
+showTens Two   = "twenty"
+showTens Three = "thirty"
+showTens Four  = "forty"
+showTens Five  = "fifty"
+showTens Six   = "sixty"
+showTens Seven = "seventy"
+showTens Eight = "eighty"
+showTens Nine  = "ninety"
+
+showTwoDigits :: Digit -> Digit -> Chars
+showTwoDigits Zero d    = showDigit d
+showTwoDigits One Zero  = "ten"
+showTwoDigits One One   = "eleven"
+showTwoDigits One Two   = "twelve"
+showTwoDigits One Three = "thirteen"
+showTwoDigits One Four  = "fourteen"
+showTwoDigits One Five  = "fifteen"
+showTwoDigits One Six   = "sixteen"
+showTwoDigits One Seven = "seventeen"
+showTwoDigits One Eight = "eighteen"
+showTwoDigits One Nine  = "nineteen"
+showTwoDigits d1 Zero   = showTens d1
+showTwoDigits d1 d2     = showTens d1 ++ "-" ++ showDigit d2
+
+showThreeDigits :: Digit -> Digit -> Digit -> Chars
+showThreeDigits Zero Zero Zero = ""
+showThreeDigits Zero Zero d3 = showDigit d3
+showThreeDigits Zero d2 d3 = showTwoDigits d2 d3
+showThreeDigits d1 Zero Zero = showDigit d1 ++ " hundred"
+showThreeDigits d1 Zero d3 = showDigit d1 ++ " hundred and " ++ showDigit d3
+showThreeDigits d1 d2 d3 = showDigit d1 ++ " hundred and " ++ showTwoDigits d2 d3
 
 -- A data type representing one, two or three digits, which may be useful for grouping.
-data Digit3 =
-  D1 Digit
-  | D2 Digit Digit
-  | D3 Digit Digit Digit
-  deriving Eq
+data Digit3
+    = D1 Digit
+    | D2 Digit Digit
+    | D3 Digit Digit Digit
+    deriving (Eq)
 
 -- Possibly convert a character to a digit.
-fromChar ::
-  Char
-  -> Optional Digit
-fromChar '0' =
-  Full Zero
-fromChar '1' =
-  Full One
-fromChar '2' =
-  Full Two
-fromChar '3' =
-  Full Three
-fromChar '4' =
-  Full Four
-fromChar '5' =
-  Full Five
-fromChar '6' =
-  Full Six
-fromChar '7' =
-  Full Seven
-fromChar '8' =
-  Full Eight
-fromChar '9' =
-  Full Nine
-fromChar _ =
-  Empty
+fromChar :: Char -> Optional Digit
+fromChar '0' = Full Zero
+fromChar '1' = Full One
+fromChar '2' = Full Two
+fromChar '3' = Full Three
+fromChar '4' = Full Four
+fromChar '5' = Full Five
+fromChar '6' = Full Six
+fromChar '7' = Full Seven
+fromChar '8' = Full Eight
+fromChar '9' = Full Nine
+fromChar _   = Empty
 
 -- | Take a numeric value and produce its English output.
 --
@@ -320,8 +341,47 @@ fromChar _ =
 --
 -- >>> dollars "456789123456789012345678901234567890123456789012345678901234567890.12"
 -- "four hundred and fifty-six vigintillion seven hundred and eighty-nine novemdecillion one hundred and twenty-three octodecillion four hundred and fifty-six septendecillion seven hundred and eighty-nine sexdecillion twelve quindecillion three hundred and forty-five quattuordecillion six hundred and seventy-eight tredecillion nine hundred and one duodecillion two hundred and thirty-four undecillion five hundred and sixty-seven decillion eight hundred and ninety nonillion one hundred and twenty-three octillion four hundred and fifty-six septillion seven hundred and eighty-nine sextillion twelve quintillion three hundred and forty-five quadrillion six hundred and seventy-eight trillion nine hundred and one billion two hundred and thirty-four million five hundred and sixty-seven thousand eight hundred and ninety dollars and twelve cents"
-dollars ::
-  Chars
-  -> Chars
-dollars =
-  error "todo: Course.Cheque#dollars"
+dollars :: Chars -> Chars
+dollars input = toDollars ++ " and " ++ toCents
+  where (d,c) = break (== '.') input
+        dolls = dropWhile (== '0') (filter isDigit d)
+        cents = take 2 (filter isDigit c ++ "00")
+        toDollars = pluralize "dollar" (toEnglish dolls)
+        toCents = pluralize "cent" (toEnglish cents)
+        pluralize :: Chars -> Chars -> Chars
+        pluralize currency amount
+          | amount == "one" = amount ++ " " ++ currency
+          | otherwise = amount ++ " " ++ currency ++ "s"
+
+illionAssoc :: [(Int, Chars)]
+illionAssoc = hlist (indexList 0 illion)
+
+indexList :: Int -> List a -> List (Int, a)
+indexList _ Nil     = Nil
+indexList n (x:.xs) = (n, x) :. indexList (n + 1) xs
+
+toEnglish :: Chars -> Chars
+toEnglish = toText . digits
+  where digits = indexList 0 . groupDigits . reverse
+        toText Nil = "zero"
+        toText (d:.ds)
+          | null ds = digitToText d
+          | otherwise = toText ds ++ addSeparator (digitToText d)
+        addSeparator :: Chars -> Chars
+        addSeparator Nil = Nil
+        addSeparator txt = " " ++ txt
+        digitToText (n,d) = case showDigit3 d of
+                              Nil -> Nil
+                              txt -> txt ++ findIllion n
+        findIllion x = case lookup x illionAssoc of
+                          Just str@(_:._) -> " " ++ str
+                          _               -> ""
+
+groupDigits :: Chars -> List Digit3
+groupDigits Nil = Nil
+groupDigits (d:.Nil) = D1 (toDigit d) :. Nil
+groupDigits (d2:.d1:.Nil) = D2 (toDigit d1) (toDigit d2) :. Nil
+groupDigits (d3:.d2:.d1:.ds) = D3 (toDigit d1) (toDigit d2) (toDigit d3) :. groupDigits ds
+
+toDigit :: Char -> Digit
+toDigit = fromFull . fromChar

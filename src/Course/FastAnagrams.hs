@@ -3,14 +3,13 @@
 
 module Course.FastAnagrams where
 
-import           Control.DeepSeq
 import           Course.Applicative
 import           Course.Core
+import           Course.FileIO
 import           Course.Functor
 import           Course.List
 import           Course.Monad
 import qualified Data.Set           as S
-import           System.IO          hiding (readFile)
 
 -- Return all anagrams of the given string
 -- that appear in the given dictionary file.
@@ -22,12 +21,6 @@ fastAnagrams name f = process . listh <$> readLatin f
     process =
         flip (filter . flip S.member) (permutations name) .
         S.fromList . hlist . lines
-
-readLatin :: Chars -> IO [Char]
-readLatin file = withFile (hlist file) ReadMode $ \h ->
-  do hSetEncoding h latin1
-     contents <- hGetContents h
-     return $!! contents
 
 newtype NoCaseString = NoCaseString { ncString :: Chars }
 

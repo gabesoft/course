@@ -1,15 +1,17 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RebindableSyntax    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
 
 module Course.FileIO where
 
-import Course.Core
-import Course.Applicative
-import Course.Monad
-import Course.Functor
-import Course.List
+import           Control.DeepSeq
+import           Course.Applicative
+import           Course.Core
+import           Course.Functor
+import           Course.List
+import           Course.Monad
+import           System.IO          hiding (readFile, FilePath)
 
 {-
 
@@ -52,7 +54,7 @@ To test this module, load ghci in the root of the project directory, and do
 Example output:
 
 $ ghci
-GHCi, version ... 
+GHCi, version ...
 Loading package...
 Loading ...
 [ 1 of 28] Compiling (etc...
@@ -78,6 +80,18 @@ main ::
 main =
   error "todo: Course.FileIO#main"
 
+readUtf8 :: Chars -> IO [Char]
+readUtf8 file = withFile (hlist file) ReadMode $ \h ->
+  do hSetEncoding h utf8
+     contents <- hGetContents h
+     return $!! contents
+
+readLatin :: Chars -> IO [Char]
+readLatin file = withFile (hlist file) ReadMode $ \h ->
+  do hSetEncoding h latin1
+     contents <- hGetContents h
+     return $!! contents
+
 type FilePath =
   Chars
 
@@ -88,9 +102,7 @@ run ::
 run =
   error "todo: Course.FileIO#run"
 
-getFiles ::
-  List FilePath
-  -> IO (List (FilePath, Chars))
+getFiles :: List FilePath -> IO (List (FilePath, Chars))
 getFiles =
   error "todo: Course.FileIO#getFiles"
 

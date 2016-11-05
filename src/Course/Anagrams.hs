@@ -4,14 +4,13 @@
 
 module Course.Anagrams where
 
-import           Control.DeepSeq
 import           Course.Applicative
 import           Course.Core
+import           Course.FileIO
 import           Course.Functor
 import           Course.List
 import           Course.Monad
 import qualified Data.List          as L
-import           System.IO          hiding (readFile)
 
 {-
 
@@ -41,18 +40,6 @@ anagrams input file = do
   let base = toLower <$> sort input
   let anas = filter (\w -> sort w `equalIgnoringCase` base) fileWords
   return anas
-
-readUtf8 :: Chars -> IO [Char]
-readUtf8 file = withFile (hlist file) ReadMode $ \h ->
-  do hSetEncoding h utf8
-     contents <- hGetContents h
-     return $!! contents
-
-readLatin :: Chars -> IO [Char]
-readLatin file = withFile (hlist file) ReadMode $ \h ->
-  do hSetEncoding h latin1
-     contents <- hGetContents h
-     return $!! contents
 
 sort :: Chars -> Chars
 sort = listh . L.sort . hlist

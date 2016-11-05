@@ -26,12 +26,16 @@ vooid = (<$>) (const ())
 untilM ::
   Monad m =>
   (a -> m Bool) -- ^ The predicate to satisfy to stop running the action.
-  -> m a        -- ^ The action to run until the predicate satisfies.
+  -> m a -- ^ The action to run until the predicate satisfies.
   -> m a
-untilM p a = do
-  r <- a
-  q <- p r
-  if q then pure r else untilM p a
+untilM p a =
+  a >>= \r ->
+  p r >>= \q ->
+  if q
+    then
+      pure r
+    else
+      untilM p a
 
 -- | Example program that uses IO to echo back characters that are entered by the user.
 echo :: IO ()
