@@ -5,7 +5,5 @@ module Main (
 import Network.Server.Chat.Chat
 import Network.Server.Chat.Loop
 
-main ::
-  IO a
-main =
-  chat
+main :: IO a
+main = chat

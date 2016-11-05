@@ -137,7 +137,7 @@ server protocol to support a game of multi-user TicTacToe. There are a few
 simplifying assumptions for this problem:
 
 * Only one active game needs to be maintained by the server at a time.
-* Game players will not be manages, so any user may be able to manipulate the board at any time.
+* Game players will not be managers, so any user may be able to manipulate the board at any time.
 
 
 ```
