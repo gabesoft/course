@@ -1,11 +1,8 @@
 module Main
-(
-  main
-) where
+  (main)
+  where
 
 import Network.Server.TicTacToe.Game
 
-main ::
-  IO ()
-main =
-  play
+main :: IO ()
+main = play

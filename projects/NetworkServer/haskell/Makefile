@@ -11,4 +11,7 @@ test-watch:
 chat: build
 	stack exec network-chat
 
+tictactoe: build
+	stack exec network-tictactoe
+
 .PHONY: release test loc clean
