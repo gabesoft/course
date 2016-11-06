@@ -130,7 +130,10 @@ readIOEnvval :: IORefLoop a a
 readIOEnvval = Loop $ \env -> readIORef (envvalL `getL` env)
 
 incrIOEnvval :: Num a => IORefLoop a a
-incrIOEnvval = Loop $ \env -> atomicModifyIORef_ (envvalL `getL` env) (+1)
+incrIOEnvval = addToIOEnvval 1
+
+addToIOEnvval :: Num a => a -> IORefLoop a a
+addToIOEnvval n = Loop $ \env -> atomicModifyIORef_ (envvalL `getL` env) (+n)
 
 allClients :: IOLoop v (Set Ref)
 allClients = Loop $ \env -> readIORef (clientsL `getL` env)
