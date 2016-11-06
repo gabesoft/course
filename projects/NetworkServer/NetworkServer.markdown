@@ -45,7 +45,7 @@ cabal build
 ./dist/build/network-chat/network-chat
 ```
 
-Start by taking a few minutes familiarising yourself with what is has
+Start by taking a few minutes familiarising yourself with what it has
 been provided. You should be able to implement the problem primarily
 using functions provided in this project and those you have used to
 complete earlier course exercises. But remember this is _not_ an

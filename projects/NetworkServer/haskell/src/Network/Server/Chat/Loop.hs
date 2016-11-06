@@ -56,26 +56,32 @@ server ::
   -> IOLoop v () -- per-client
   -> IO a
 server i r (Loop f) =
-  let hand s w c = forever $
+  let port = 6060
+      hand s w c = forever $
                      do q <- accept' s
                         lSetBuffering q NoBuffering
                         _ <- atomicModifyIORef_ c (S.insert (refL `getL` q))
                         x <- r w
                         forkIO (f (Env q c x))
   in withSocketsDo $ do
-       s <- listenOn (PortNumber 6060)
+       s <- listenOn (PortNumber port)
+       putStrLn ("Server listening on " ++ show port)
        w <- i
        c <- newIORef S.empty
        hand s w c `finally` sClose s
-
-allClients :: IOLoop v (Set Ref)
-allClients = Loop $ \env -> readIORef (clientsL `getL` env)
 
 perClient ::
   IOLoop v x                -- client accepted (post)
   -> (String -> IOLoop v a) -- read line from client
   -> IOLoop v ()
-perClient l g = error "todo"
+perClient q f =
+  let lp = do
+            k <- etry lGetLine
+            case k of
+              Left e   -> xprint e
+              Right [] -> lp
+              Right l  -> f l >> lp
+  in q >> lp
 
 loop ::
   IO w                      -- server initialise
@@ -108,11 +114,11 @@ infixl 2 !
 
 purgeClients :: Foldable t => (Ref -> IOLoop v ()) -> t Ref -> IOLoop v ()
 purgeClients a =
-  mapM_ (\y ->
-    ecatch (a y)
-      (\x -> do _ <- modifyClients (S.delete y)
-                xprint x)
-        )
+    mapM_ $
+    \y ->
+          ecatch
+              (a y)
+              (\x -> modifyClients (S.delete y) >> xprint x)
 
 readEnv :: Applicative f => Loop v f (Env v)
 readEnv = Loop $ pure
@@ -123,17 +129,22 @@ readEnvval = fmap (envvalL `getL`) readEnv
 readIOEnvval :: IORefLoop a a
 readIOEnvval = Loop $ \env -> readIORef (envvalL `getL` env)
 
+incrIOEnvval :: Num a => IORefLoop a a
+incrIOEnvval = Loop $ \env -> atomicModifyIORef_ (envvalL `getL` env) (+1)
+
+allClients :: IOLoop v (Set Ref)
+allClients = Loop $ \env -> readIORef (clientsL `getL` env)
+
 allClientsButThis :: IOLoop v (Set Ref)
 allClientsButThis =
-  Loop $ \env ->
-    fmap (S.delete ((acceptL .@ refL) `getL` env)) (readIORef (clientsL `getL` env))
+    Loop $ \env ->
+         fmap
+             (S.delete ((acceptL .@ refL) `getL` env))
+             (readIORef (clientsL `getL` env))
 
 -- Control.Monad.CatchIO
 ecatch :: Exception e => IOLoop v a -> (e -> IOLoop v a) -> IOLoop v a
-ecatch (Loop k) f =
-  Loop $ \env -> k env `catch` (\e -> let Loop l = f e in l env)
+ecatch (Loop k) f = Loop $ \env -> k env `catch` (\e -> let Loop l = f e in l env)
 
 modifyClients :: (Set Ref -> Set Ref) -> IOLoop v (Set Ref)
-modifyClients f =
-  Loop $ \env ->
-    atomicModifyIORef_ (clientsL `getL` env) f
+modifyClients f = Loop $ \env -> atomicModifyIORef_ (clientsL `getL` env) f

@@ -62,8 +62,6 @@ executable network-chat
                     Network.Server.Common.Line
                     Network.Server.Common.Ref
 
-  -- extra-libraries:  llvm
-
   build-depends:    base < 5 && >= 4
                   , network-server
                   , mtl

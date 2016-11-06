@@ -13,6 +13,7 @@ type Chat a = IORefLoop Integer a
 data ChatCommand
     = Chat String
     | Incr
+    | Add String
     | Unknown String
     deriving (Eq,Show)
 
@@ -29,21 +30,30 @@ chat = iorefLoop 0 (readIOEnvval >>= pPutStrLn . show) (process . chatCommand)
 -- >>> chatCommand "CHAT hi"
 -- Chat "hi"
 --
--- >>> chatCommand "Chat bye"
+-- >>> chatCommand "CHAT bye"
 -- Chat "bye"
 --
 -- >>> chatCommand "INCR"
 -- Incr
 --
+-- >>> chatCommand "ADD 5"
+-- Add 5
+--
 -- >>> chatCommand "Nothing"
 -- UNKNOWN "Nothing"
 chatCommand :: String -> ChatCommand
 chatCommand z =
-  Unknown z `fromMaybe` msum [
-                               Chat <$> trimPrefixThen "CHAT" z
-                             , Incr <$ trimPrefixThen "INCR" z
-                             ]
+    Unknown z `fromMaybe`
+    msum [ Chat <$> trimPrefixThen "CHAT" z
+         , Incr <$ trimPrefixThen "INCR" z
+         , Add <$> trimPrefixThen "ADD" z
+         ]
+
+showCounter :: Integer -> String
+showCounter x = "counter is at " ++ show x
 
 process :: ChatCommand -> Chat ()
-process =
-  error "todo"
+process (Chat s)    = allClientsButThis ! s
+process (Incr)      = incrIOEnvval >> readIOEnvval >>= pPutStrLn . showCounter
+process (Add s)     = undefined
+process (Unknown s) = allClientsButThis ! s
