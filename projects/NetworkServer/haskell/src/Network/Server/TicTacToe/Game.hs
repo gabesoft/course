@@ -161,7 +161,7 @@ makeMove p b =
     outcome = move b p
 
 initialBoard :: Board
-initialBoard = start N
+initialBoard = start NW
 
 game
   :: Game x -- client accepted (post)

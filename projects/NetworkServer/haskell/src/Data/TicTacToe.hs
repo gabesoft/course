@@ -99,6 +99,7 @@ move board@(Board m h) p =
              wins =
                [ (NW, N, NE)
                , (N, C, S)
+               , (NW, W, SW)
                , (NE, E, SE)
                , (NW, N, NE)
                , (W, C, E)
